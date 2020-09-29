@@ -24,6 +24,9 @@ public class NoteServlet extends HttpServlet {
         String path = getServletContext().getRealPath("/WEB-INF/note.txt");
         String title;
         String contents;  
+        final String INSERT = "insert";
+        final String EDIT = "edit";
+        final String DELETE = "delete";
         
         // to read files
         try (BufferedReader br = new BufferedReader(new FileReader(new File(path)))) {
@@ -31,16 +34,32 @@ public class NoteServlet extends HttpServlet {
             contents = br.readLine();
             br.close();
         }
-
-        Note note = new Note(title, contents);
-        request.setAttribute("note", note);
         
         String param = request.getParameter("type");
         if (param == null) {
-            getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);            
-        } else { 
-            getServletContext().getRequestDispatcher("/WEB-INF/editnote.jsp").forward(request, response);            
+            param = "";
         }
+
+        Note note = new Note(title, contents); 
+        
+        switch (param) {
+            case INSERT:
+                delete();
+                getServletContext().getRequestDispatcher("/WEB-INF/editnote.jsp").forward(request, response);
+                break;
+            case EDIT:
+                request.setAttribute("note", note);
+                getServletContext().getRequestDispatcher("/WEB-INF/editnote.jsp").forward(request, response);
+                break;
+            case DELETE:
+                delete();
+                getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);
+                break; 
+            default:
+                request.setAttribute("note", note);
+                getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);
+                break;
+        }            
     }
 
     @Override
@@ -70,5 +89,15 @@ public class NoteServlet extends HttpServlet {
         request.setAttribute("note", note);
         
         getServletContext().getRequestDispatcher("/WEB-INF/viewnote.jsp").forward(request, response);
+    }
+    
+    private void delete() throws IOException {
+        String path = getServletContext().getRealPath("/WEB-INF/note.txt");
+         // to write to a file
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(path, false)))) {
+            pw.println("");
+            pw.close();
+        }
+        
     }
 }
